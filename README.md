@@ -1,70 +1,62 @@
-# Getting Started with Create React App
+# 가격 계산기 (Price Calculator)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+공급가액과 총액 기준의 가격을 계산할 수 있는 React 기반 웹 애플리케이션입니다.
 
-## Available Scripts
+## 주요 기능
 
-In the project directory, you can run:
+### 1. 공급가 기준 계산기
+- 공급가액 입력
+- 할인율 적용
+- VAT(10%) 자동 계산
+- 최종 금액의 "예쁜 금액" 여부 확인
 
-### `npm start`
+### 2. 총액 기준 계산기
+- 최종 금액(VAT 포함) 입력
+- 할인율 적용
+- 공급가액 역산 계산
+- 최종 금액의 "예쁜 금액" 여부 확인
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 기술 스택
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- React
+- Material-UI (@mui/material)
+- JavaScript
 
-### `npm test`
+## 설치 및 실행 방법
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. 저장소 클론
+```bash
+git clone https://github.com/jigookang/prototype.git
+cd prototype
+```
 
-### `npm run build`
+2. 의존성 설치
+```bash
+npm install
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+3. 개발 서버 실행
+```bash
+npm start
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+4. 브라우저에서 확인
+- http://localhost:3000 접속
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 사용 방법
 
-### `npm run eject`
+### 공급가 기준 계산
+1. 공급가액 입력
+2. 할인율 입력
+3. '계산하기' 버튼 클릭
+4. 할인된 금액과 VAT가 포함된 최종 금액 확인
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 총액 기준 계산
+1. 총액(VAT 포함) 입력
+2. 할인율 입력
+3. '계산하기' 버튼 클릭
+4. 역산된 공급가액과 VAT 확인
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 예쁜 금액이란?
+- 최종 금액이 10의 배수인 경우를 "예쁜 금액"으로 판단
+- 계산 결과에서 ✅ 또는 ❌ 아이콘으로 표시
