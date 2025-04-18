@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { TextField, Button, Card, CardContent, Typography, Grid } from "@mui/material";
 
+/**
+ * PrettyPriceChecker
+ * - 공급가 기준: 총액이 0(또는 원하는 자리수)으로 예쁘게 끝나도록 0~99원 범위 내에서 최소 추가 할인 자동 탐색
+ * - PRETTY_MOD 값을 10(1의 자리가 0) ‑or‑ 100(두 자리 00) 등으로 바꾸면 규칙을 손쉽게 변경할 수 있다.
+ */
 export default function PrettyPriceChecker() {
   /* ──────────① 공급가 기준────────── */
   const [supplyBasePrice, setSupplyBasePrice] = useState("");
@@ -22,6 +27,9 @@ export default function PrettyPriceChecker() {
   const [finalDiscountRate, setFinalDiscountRate] = useState("");
   const [finalResult, setFinalResult] = useState(null);
 
+  // "예쁜" 금액 정의 (10 → 1의 자리가 0, 100 → 두 자리가 00)
+  const PRETTY_MOD = 10;
+
   /* ────────── 공통 검증 ────────── */
   const validate = (basePrice, discountRate) => {
     const basePriceNum = Number(basePrice);
@@ -35,24 +43,39 @@ export default function PrettyPriceChecker() {
     );
   };
 
-  /* ────────── 계산 함수들 ────────── */
+  /* ────────── ① 공급가 기준 계산 ────────── */
   const calculateSupply = () => {
     const base = Number(supplyBasePrice);
     const rate = Number(supplyDiscountRate);
-    const discount = Math.round(base * (rate / 100));
-    const discounted = base - discount;
-    const vat = Math.round(discounted * 0.1);
-    const total = discounted + vat;
+
+    // 1) 기본 비즈니스 할인
+    const businessDiscount = Math.round(base * (rate / 100));
+
+    // 2) 할인 금액을 100원 단위로 올림 처리
+    const rawTotalDiscount = businessDiscount;
+    const roundedTotalDiscount = Math.ceil(rawTotalDiscount / 100) * 100;
+    const additionalDiscount = roundedTotalDiscount - businessDiscount;
+
+    // 3) 결과 계산
+    const finalDiscounted = base - roundedTotalDiscount;
+    const finalVat = Math.round(finalDiscounted * 0.1);
+    const finalTotal = finalDiscounted + finalVat;
+
     setSupplyResult({
       basePrice: base,
-      discountAmount: discount,
-      discountedPrice: discounted,
-      vat,
-      total,
-      pretty: total % 10 === 0 ? "✅ 예쁨" : "❌ 안 예쁨",
+      businessDiscountRate: rate,
+      businessDiscount,
+      additionalDiscount,
+      additionalDiscountRate: (additionalDiscount / base) * 100,
+      totalDiscount: roundedTotalDiscount,
+      discountedPrice: finalDiscounted,
+      vat: finalVat,
+      total: finalTotal,
+      pretty: finalTotal % PRETTY_MOD === 0,
     });
   };
 
+  /* ────────── ② 총액 기준 계산 (변경 없음) ────────── */
   const calculateTotal = () => {
     const base = Number(totalBasePrice);
     const rate = Number(totalDiscountRate);
@@ -67,10 +90,11 @@ export default function PrettyPriceChecker() {
       subtotal,
       discountAmount: discount,
       total,
-      pretty: total % 10 === 0 ? "✅ 예쁨" : "❌ 안 예쁨",
+      pretty: total % PRETTY_MOD === 0 ? "✅ 예쁨" : "❌ 안 예쁨",
     });
   };
 
+  /* ────────── ③ 총액(공급가 할인) 계산 (변경 없음) ────────── */
   const calculateSplit = () => {
     const base = Number(splitBasePrice);
     const rate = Number(splitDiscountRate);
@@ -79,8 +103,8 @@ export default function PrettyPriceChecker() {
     const discountedSupply = originalSupply - discount;
     const vat = Math.round(discountedSupply * 0.1);
     const calcTotal = discountedSupply + vat;
-    const roundedTotal = Math.floor(calcTotal / 10) * 10;
-    const adjustment = Math.abs(base - roundedTotal) < 10 ? base - roundedTotal : 0;
+    const roundedTotal = Math.floor(calcTotal / PRETTY_MOD) * PRETTY_MOD;
+    const adjustment = Math.abs(base - roundedTotal) < PRETTY_MOD ? base - roundedTotal : 0;
     setSplitResult({
       originalSupplyPrice: originalSupply,
       discountAmount: discount,
@@ -91,22 +115,17 @@ export default function PrettyPriceChecker() {
     });
   };
 
-  /* ────────── NEW: 최종가격 역산 ────────── */
+  /* ────────── ④ 최종가격 역산 계산 (변경 없음) ────────── */
   const calculateFinalReverse = () => {
     const final = Number(finalPrice);
     const rate = Number(finalDiscountRate);
     const rateFactor = 1 - rate / 100;
     if (rateFactor <= 0) return; // 할인율 100% 이상 방지
 
-    // 1) 소계(할인 전) 역추적
     const rawSubtotal = final / rateFactor;
     const subtotal = Math.round(rawSubtotal);
-
-    // 2) 공급가·부가세 분리
     const supplyPrice = Math.round(subtotal / 1.1);
     const vat = subtotal - supplyPrice;
-
-    // 3) 할인액, 재계산한 총액 및 조정비
     const discount = Math.round(subtotal * (rate / 100));
     const recalculatedTotal = subtotal - discount;
     const adjustment = final - recalculatedTotal;
@@ -118,20 +137,27 @@ export default function PrettyPriceChecker() {
       discountAmount: discount,
       adjustmentFee: adjustment,
       total: final,
-      pretty: final % 10 === 0 ? "✅ 예쁨" : "❌ 안 예쁨",
+      pretty: final % PRETTY_MOD === 0 ? "✅ 예쁨" : "❌ 안 예쁨",
     });
   };
 
-  /* ────────── 공통 영수증 행 ────────── */
-  const ReceiptRow = ({ label, amount, isDiscount, isTotal }) => (
+  /* ────────── 공통 ReceiptRow 컴포넌트 ────────── */
+  const ReceiptRow = ({ label, amount, isDiscount, isTotal, subText, color }) => (
     <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0" }}>
-      <Typography variant="body2" style={{ color: isDiscount ? "#2962ff" : "inherit" }}>
-        {label}
-      </Typography>
+      <div>
+        <Typography variant="body2" style={{ color: color || (isDiscount ? "#2962ff" : "inherit") }}>
+          {label}
+        </Typography>
+        {subText && (
+          <Typography variant="caption" style={{ color: "#666", display: "block", marginTop: "2px" }}>
+            {subText}
+          </Typography>
+        )}
+      </div>
       <Typography
         variant="body2"
         style={{
-          color: isDiscount ? "#2962ff" : "inherit",
+          color: color || (isDiscount ? "#2962ff" : "inherit"),
           fontWeight: isTotal ? "bold" : "normal",
         }}
       >
@@ -148,15 +174,15 @@ export default function PrettyPriceChecker() {
         {/* ① 공급가 기준 */}
         <Grid item>
           <Card style={{ width: 320, height: 600 }}>
-            <CardContent style={{ 
-              display: "flex", 
-              flexDirection: "column", 
+            <CardContent style={{
+              display: "flex",
+              flexDirection: "column",
               gap: "16px",
               height: "100%",
               boxSizing: "border-box",
               overflow: "auto"
             }}>
-              <Typography variant="h5">공급가 기준 계산기</Typography>
+              <Typography variant="h5">공급가 기준 계산기(0단위 총액)</Typography>
               <TextField
                 label="공급가액 (원)"
                 type="number"
@@ -182,18 +208,39 @@ export default function PrettyPriceChecker() {
               {supplyResult && (
                 <div style={{ marginTop: 16, background: "#f9f9f9", padding: 16, borderRadius: 8 }}>
                   <Typography variant="subtitle1">요금 내역</Typography>
+                  <Typography variant="caption" style={{ color: "#666", display: "block", marginBottom: "8px" }}>
+                    사용자 입력: {supplyBasePrice.toLocaleString()}원 (공급가), {supplyDiscountRate}% (할인율)
+                  </Typography>
+
                   <ReceiptRow label="공급가액" amount={supplyResult.basePrice} />
+
                   <ReceiptRow
-                    label={`비즈니스 할인 ${supplyDiscountRate}%`}
-                    amount={supplyResult.discountAmount}
+                    label={`비즈니스 할인 ${supplyResult.businessDiscountRate}%`}
+                    amount={supplyResult.businessDiscount}
                     isDiscount
                   />
+
+                  <ReceiptRow
+                    label="추가 할인"
+                    amount={supplyResult.additionalDiscount}
+                    isDiscount
+                    subText={`실제 추가 할인율: ${supplyResult.additionalDiscountRate.toFixed(2)}%`}
+                  />
+
+                  <ReceiptRow
+                    label="총 할인 금액"
+                    amount={supplyResult.totalDiscount}
+                    isDiscount
+                    isTotal
+                  />
+
                   <ReceiptRow
                     label="할인 후 공급가액"
                     amount={supplyResult.discountedPrice}
-                    isTotal
                   />
+
                   <ReceiptRow label="부가세 (VAT)" amount={supplyResult.vat} />
+
                   <div
                     style={{
                       marginTop: "8px",
@@ -206,11 +253,11 @@ export default function PrettyPriceChecker() {
                   <Typography
                     align="right"
                     style={{
-                      color: supplyResult.pretty.includes("예쁨") ? "#4caf50" : "#f44336",
                       marginTop: 8,
+                      color: supplyResult.pretty ? "#4caf50" : "#f44336",
                     }}
                   >
-                    {supplyResult.pretty}
+                    {supplyResult.pretty ? "✅ 예쁨" : "❌ 안 예쁨"}
                   </Typography>
                 </div>
               )}
@@ -221,9 +268,9 @@ export default function PrettyPriceChecker() {
         {/* ② 총액 기준 */}
         <Grid item>
           <Card style={{ width: 320, height: 600 }}>
-            <CardContent style={{ 
-              display: "flex", 
-              flexDirection: "column", 
+            <CardContent style={{
+              display: "flex",
+              flexDirection: "column",
               gap: "16px",
               height: "100%",
               boxSizing: "border-box",
@@ -276,8 +323,8 @@ export default function PrettyPriceChecker() {
                   <Typography
                     align="right"
                     style={{
-                      color: totalResult.pretty.includes("예쁨") ? "#4caf50" : "#f44336",
                       marginTop: 8,
+                      color: totalResult.pretty.includes("예쁨") ? "#4caf50" : "#f44336",
                     }}
                   >
                     {totalResult.pretty}
@@ -291,9 +338,9 @@ export default function PrettyPriceChecker() {
         {/* ③ 총액(공급가 할인) */}
         <Grid item>
           <Card style={{ width: 320, height: 600 }}>
-            <CardContent style={{ 
-              display: "flex", 
-              flexDirection: "column", 
+            <CardContent style={{
+              display: "flex",
+              flexDirection: "column",
               gap: "16px",
               height: "100%",
               boxSizing: "border-box",
@@ -350,10 +397,10 @@ export default function PrettyPriceChecker() {
                     align="right"
                     style={{
                       marginTop: 8,
-                      color: splitResult.total % 10 === 0 ? "#4caf50" : "#f44336",
+                      color: splitResult.total % PRETTY_MOD === 0 ? "#4caf50" : "#f44336",
                     }}
                   >
-                    {splitResult.total % 10 === 0 ? "✅ 예쁨" : "❌ 안 예쁨"}
+                    {splitResult.total % PRETTY_MOD === 0 ? "✅ 예쁨" : "❌ 안 예쁨"}
                   </Typography>
                 </div>
               )}
@@ -364,9 +411,9 @@ export default function PrettyPriceChecker() {
         {/* ④ 최종가격 역산 */}
         <Grid item>
           <Card style={{ width: 320, height: 600 }}>
-            <CardContent style={{ 
-              display: "flex", 
-              flexDirection: "column", 
+            <CardContent style={{
+              display: "flex",
+              flexDirection: "column",
               gap: "16px",
               height: "100%",
               boxSizing: "border-box",
