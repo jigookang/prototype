@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { TextField, Button, Card, CardContent, Typography, Grid } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { TextField, Button, Card, CardContent, Typography, Grid, Box, IconButton } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 /**
  * PrettyPriceChecker
@@ -7,6 +9,8 @@ import { TextField, Button, Card, CardContent, Typography, Grid } from "@mui/mat
  * - PRETTY_MOD 값을 10(1의 자리가 0) ‑or‑ 100(두 자리 00) 등으로 바꾸면 규칙을 손쉽게 변경할 수 있다.
  */
 export default function PrettyPriceChecker() {
+  const navigate = useNavigate();
+
   /* ──────────① 공급가 기준────────── */
   const [supplyBasePrice, setSupplyBasePrice] = useState("");
   const [supplyDiscountRate, setSupplyDiscountRate] = useState("");
@@ -170,6 +174,20 @@ export default function PrettyPriceChecker() {
   /* ────────── 렌더링 ────────── */
   return (
     <div style={{ maxWidth: "100%", margin: "40px auto", padding: "0 40px" }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
+        <IconButton 
+          onClick={() => navigate('/')} 
+          aria-label="back to home" 
+          size="large"
+          sx={{ mr: 2 }}
+        >
+          <ArrowBackIcon fontSize="inherit" />
+        </IconButton>
+        <Typography variant="h4" component="h1">
+          가격 계산기
+        </Typography>
+      </Box>
+      
       <Grid container spacing={4} justifyContent="center">
         {/* ① 공급가 기준 */}
         <Grid item>
