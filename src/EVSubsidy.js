@@ -17,7 +17,10 @@ import {
   Grid,
   Divider,
   Card,
-  CardContent
+  CardContent,
+  List,
+  ListItem,
+  ListItemText
 } from '@mui/material';
 
 function EVSubsidy() {
@@ -34,12 +37,127 @@ function EVSubsidy() {
   const [evEfficiency, setEvEfficiency] = useState('5'); // 기본값: 5km/kWh
   const [electricityRate, setElectricityRate] = useState('100'); // 기본값: 100원/kWh
   
+  // 지역 정보 상태 관리
+  const [region, setRegion] = useState('서울특별시');
+  const [subRegion, setSubRegion] = useState('');
+  
   // 계산 결과
   const [monthlyDistance, setMonthlyDistance] = useState(0);
+  const [isCustomDistance, setIsCustomDistance] = useState(false); // 사용자가 직접 주행거리를 변경했는지 여부
   const [fuelPrice, setFuelPrice] = useState(0);
   const [evChargingCost, setEvChargingCost] = useState(0);
   const [monthlySavings, setMonthlySavings] = useState(0);
   const [annualSavings, setAnnualSavings] = useState(0);
+  
+  // 지역 및 보조금 정보
+  const regions = [
+    '서울특별시',
+    '부산광역시',
+    '대구광역시',
+    '인천광역시',
+    '광주광역시',
+    '대전광역시',
+    '울산광역시',
+    '세종특별자치시',
+    '경기도',
+    '강원도',
+    '충청북도',
+    '충청남도',
+    '전라북도',
+    '전라남도',
+    '경상북도',
+    '경상남도',
+    '제주특별자치도'
+  ];
+  
+  // 시/도별 보조금 정보 (만원 단위)
+  const subsidyData = {
+    '서울특별시': {
+      '국고보조금': 700,
+      '지자체보조금': 400,
+      '총 지원금': 1100
+    },
+    '부산광역시': {
+      '국고보조금': 700,
+      '지자체보조금': 300,
+      '총 지원금': 1000
+    },
+    '대구광역시': {
+      '국고보조금': 700,
+      '지자체보조금': 350,
+      '총 지원금': 1050
+    },
+    '인천광역시': {
+      '국고보조금': 700,
+      '지자체보조금': 420,
+      '총 지원금': 1120
+    },
+    '광주광역시': {
+      '국고보조금': 700,
+      '지자체보조금': 380,
+      '총 지원금': 1080
+    },
+    '대전광역시': {
+      '국고보조금': 700,
+      '지자체보조금': 330,
+      '총 지원금': 1030
+    },
+    '울산광역시': {
+      '국고보조금': 700,
+      '지자체보조금': 300,
+      '총 지원금': 1000
+    },
+    '세종특별자치시': {
+      '국고보조금': 700,
+      '지자체보조금': 450,
+      '총 지원금': 1150
+    },
+    '경기도': {
+      '국고보조금': 700,
+      '지자체보조금': 380,
+      '총 지원금': 1080
+    },
+    '강원도': {
+      '국고보조금': 700,
+      '지자체보조금': 400,
+      '총 지원금': 1100
+    },
+    '충청북도': {
+      '국고보조금': 700,
+      '지자체보조금': 350,
+      '총 지원금': 1050
+    },
+    '충청남도': {
+      '국고보조금': 700,
+      '지자체보조금': 370,
+      '총 지원금': 1070
+    },
+    '전라북도': {
+      '국고보조금': 700,
+      '지자체보조금': 400,
+      '총 지원금': 1100
+    },
+    '전라남도': {
+      '국고보조금': 700,
+      '지자체보조금': 450,
+      '총 지원금': 1150
+    },
+    '경상북도': {
+      '국고보조금': 700,
+      '지자체보조금': 330,
+      '총 지원금': 1030
+    },
+    '경상남도': {
+      '국고보조금': 700,
+      '지자체보조금': 350,
+      '총 지원금': 1050
+    },
+    '제주특별자치도': {
+      '국고보조금': 700,
+      '지자체보조금': 500,
+      '총 지원금': 1200
+    }
+  };
   
   // 연료 가격 (원/L)
   const fuelPrices = {
@@ -61,6 +179,19 @@ function EVSubsidy() {
     }
   };
   
+  // 주행거리 직접 변경 처리
+  const handleDistanceChange = (e) => {
+    const value = e.target.value;
+    
+    // 유효성 검사: 숫자만 입력 가능
+    if (value && !/^\d+$/.test(value)) {
+      return;
+    }
+    
+    setMonthlyDistance(value ? parseInt(value) : 0);
+    setIsCustomDistance(true);
+  };
+  
   // 차량 정보 입력 처리
   const handleFuelTypeChange = (e) => {
     setFuelType(e.target.value);
@@ -78,17 +209,24 @@ function EVSubsidy() {
     setElectricityRate(e.target.value);
   };
   
+  // 지역 선택 처리
+  const handleRegionChange = (e) => {
+    setRegion(e.target.value);
+  };
+  
   // 주행거리 계산
   useEffect(() => {
-    if (activeStep === 1 && fuelCost && fuelType && fuelEfficiency) {
+    if (activeStep === 1 && fuelCost && fuelType && fuelEfficiency && !isCustomDistance) {
       // 주행거리 계산 공식: 월 주행거리 = 한 달 유류비 / (연료가격 × (1 / 연비))
       const currentFuelPrice = fuelPrices[fuelType];
       setFuelPrice(currentFuelPrice);
       
-      const distance = parseFloat(fuelCost) / (currentFuelPrice * (1 / parseFloat(fuelEfficiency)));
+      // 만원 단위로 입력된 값을 원 단위로 변환 (× 10000)
+      const fuelCostInWon = parseFloat(fuelCost) * 10000;
+      const distance = fuelCostInWon / (currentFuelPrice * (1 / parseFloat(fuelEfficiency)));
       setMonthlyDistance(Math.round(distance));
     }
-  }, [activeStep, fuelCost, fuelType, fuelEfficiency]);
+  }, [activeStep, fuelCost, fuelType, fuelEfficiency, isCustomDistance]);
   
   // 전기차 충전 비용 계산
   useEffect(() => {
@@ -97,8 +235,9 @@ function EVSubsidy() {
       const chargingCost = monthlyDistance / parseFloat(evEfficiency) * parseFloat(electricityRate);
       setEvChargingCost(Math.round(chargingCost));
       
-      // 월간 절약 비용
-      const savings = parseFloat(fuelCost) - chargingCost;
+      // 월간 절약 비용 (만원 단위 입력값 → 원 단위 변환)
+      const fuelCostInWon = parseFloat(fuelCost) * 10000;
+      const savings = fuelCostInWon - chargingCost;
       setMonthlySavings(Math.round(savings));
       
       // 연간 절약 비용
@@ -127,6 +266,12 @@ function EVSubsidy() {
   // 이전 단계로 돌아가기
   const handleBack = () => {
     setActiveStep((prevStep) => prevStep - 1);
+  };
+  
+  // 처음으로 돌아가기 처리
+  const handleReset = () => {
+    setActiveStep(0);
+    setIsCustomDistance(false);
   };
   
   // 단계 정의
@@ -185,10 +330,10 @@ function EVSubsidy() {
                 value={fuelCost}
                 onChange={handleFuelCostChange}
                 error={!!fuelCostError}
-                helperText={fuelCostError}
+                helperText={fuelCostError || "만원 단위로 입력해주세요 (예: 40 = 40만원)"}
                 sx={{ mt: 2, mb: 4, maxWidth: '400px' }}
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">원</InputAdornment>,
+                  endAdornment: <InputAdornment position="end">만원</InputAdornment>,
                 }}
               />
               
@@ -246,15 +391,69 @@ function EVSubsidy() {
                       전기차 전환 시 예상 비용 절감
                     </Typography>
                     
+                    <Grid container spacing={3} sx={{ mt: 1 }}>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="body2" gutterBottom>
+                          월간 주행거리
+                        </Typography>
+                        <TextField
+                          variant="outlined"
+                          size="small"
+                          value={monthlyDistance}
+                          onChange={handleDistanceChange}
+                          InputProps={{
+                            endAdornment: <InputAdornment position="end">km</InputAdornment>,
+                          }}
+                          fullWidth
+                        />
+                      </Grid>
+                      
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="body2" gutterBottom>
+                          월간 유류비
+                        </Typography>
+                        <TextField
+                          variant="outlined"
+                          size="small"
+                          value={fuelCost}
+                          onChange={(e) => {
+                            handleFuelCostChange(e);
+                            setIsCustomDistance(false);
+                          }}
+                          InputProps={{
+                            endAdornment: <InputAdornment position="end">만원</InputAdornment>,
+                          }}
+                          fullWidth
+                        />
+                      </Grid>
+                      
+                      {isCustomDistance && (
+                        <Grid item xs={12}>
+                          <Button 
+                            size="small" 
+                            onClick={() => {
+                              setIsCustomDistance(false);
+                              // 원래 계산된 주행거리로 복원
+                              const fuelCostInWon = parseFloat(fuelCost) * 10000;
+                              const distance = fuelCostInWon / (fuelPrice * (1 / parseFloat(fuelEfficiency)));
+                              setMonthlyDistance(Math.round(distance));
+                            }}
+                          >
+                            기본값으로
+                          </Button>
+                        </Grid>
+                      )}
+                    </Grid>
+                    
                     <Box sx={{ mt: 3, p: 3, bgcolor: '#e8f4fd', borderRadius: 2 }}>
                       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                        한 달에 약 <span style={{ color: '#1976d2', fontSize: '1.2em' }}>{monthlySavings.toLocaleString()}</span>원 절감
+                        한 달에 약 <span style={{ color: '#1976d2', fontSize: '1.2em' }}>{Math.round(monthlySavings/10000)}</span>만원 절감
                       </Typography>
                       <Typography variant="body1" sx={{ mt: 1 }}>
-                        (기존 {parseInt(fuelCost).toLocaleString()}원 → 전기차 {evChargingCost.toLocaleString()}원)
+                        (기존 {parseInt(fuelCost).toLocaleString()}만원 → 전기차 {Math.round(evChargingCost/10000).toLocaleString()}만원)
                       </Typography>
                       <Typography variant="h6" sx={{ mt: 3, fontWeight: 'bold' }}>
-                        연간 최대 <span style={{ color: '#1976d2', fontSize: '1.2em' }}>{annualSavings.toLocaleString()}</span>원 절감 가능!
+                        연간 최대 <span style={{ color: '#1976d2', fontSize: '1.2em' }}>{Math.round(annualSavings/10000).toLocaleString()}</span>만원 절감 가능!
                       </Typography>
                     </Box>
                     
@@ -268,12 +467,21 @@ function EVSubsidy() {
               )}
               
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-                <Button 
-                  variant="outlined" 
-                  onClick={handleBack}
-                >
-                  이전 단계
-                </Button>
+                <Box>
+                  <Button 
+                    variant="outlined" 
+                    onClick={handleBack}
+                    sx={{ mr: 1 }}
+                  >
+                    이전 단계
+                  </Button>
+                  <Button 
+                    variant="text"
+                    onClick={handleReset}
+                  >
+                    처음으로
+                  </Button>
+                </Box>
                 <Button 
                   variant="contained" 
                   color="primary"
@@ -286,20 +494,140 @@ function EVSubsidy() {
           )}
           
           {activeStep === 2 && (
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h6">
-                전기차 지원금 정보 (개발 중)
+            <Box>
+              <Typography variant="h6" gutterBottom align="center">
+                전기차 지원금 정보
               </Typography>
-              <Typography variant="body1" sx={{ mt: 2 }}>
-                전기차 구매 시 받을 수 있는 보조금 정보가 곧 제공될 예정입니다.
-              </Typography>
-              <Button 
-                variant="outlined" 
-                onClick={handleBack}
-                sx={{ mt: 4 }}
-              >
-                이전 단계
-              </Button>
+              
+              <Grid container spacing={3} sx={{ mt: 1 }}>
+                <Grid item xs={12}>
+                  <FormControl fullWidth>
+                    <InputLabel>지역 선택</InputLabel>
+                    <Select
+                      value={region}
+                      onChange={handleRegionChange}
+                      label="지역 선택"
+                      displayEmpty
+                      renderValue={(selected) => {
+                        if (!selected) {
+                          return "지역을 선택하세요";
+                        }
+                        return (
+                          <Typography 
+                            sx={{ 
+                              fontWeight: 'bold',
+                              color: 'primary.main'
+                            }}
+                          >
+                            {selected}
+                          </Typography>
+                        );
+                      }}
+                    >
+                      {regions.map((regionName) => (
+                        <MenuItem 
+                          key={regionName} 
+                          value={regionName}
+                        >
+                          {regionName}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+              
+              {region && (
+                <Card sx={{ mt: 4, bgcolor: '#f9f9f9' }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      {region} 전기차 구매 보조금 정보
+                    </Typography>
+                    
+                    <List>
+                      <ListItem 
+                        sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          borderBottom: '1px solid #e0e0e0',
+                          py: 2
+                        }}
+                      >
+                        <ListItemText primary="국고보조금" />
+                        <Typography variant="body1" fontWeight="bold">
+                          {subsidyData[region]['국고보조금']}만원
+                        </Typography>
+                      </ListItem>
+                      
+                      <ListItem 
+                        sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          borderBottom: '1px solid #e0e0e0',
+                          py: 2
+                        }}
+                      >
+                        <ListItemText primary="지자체보조금" />
+                        <Typography variant="body1" fontWeight="bold">
+                          {subsidyData[region]['지자체보조금']}만원
+                        </Typography>
+                      </ListItem>
+                      
+                      <ListItem 
+                        sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          bgcolor: '#e8f4fd',
+                          py: 2
+                        }}
+                      >
+                        <ListItemText 
+                          primary="총 지원금액" 
+                          primaryTypographyProps={{ fontWeight: 'bold' }}
+                        />
+                        <Typography variant="h6" color="primary" fontWeight="bold">
+                          {subsidyData[region]['총 지원금']}만원
+                        </Typography>
+                      </ListItem>
+                    </List>
+                    
+                    <Box sx={{ mt: 3, p: 3, bgcolor: '#e8f4fd', borderRadius: 2 }}>
+                      <Typography variant="body1" gutterBottom>
+                        전기차 구매 시 절감 효과
+                      </Typography>
+                      <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold' }}>
+                        연간 <span style={{ color: '#1976d2' }}>{Math.round(annualSavings/10000).toLocaleString()}</span>만원 절약 + 보조금 <span style={{ color: '#1976d2' }}>{subsidyData[region]['총 지원금']}</span>만원
+                      </Typography>
+                      <Typography variant="h6" sx={{ mt: 2, fontWeight: 'bold' }}>
+                        = 총 <span style={{ color: '#1976d2', fontSize: '1.2em' }}>{Math.round(annualSavings/10000) + subsidyData[region]['총 지원금']}</span>만원 혜택
+                      </Typography>
+                    </Box>
+                    
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 3 }}>
+                      * 보조금은 차종과 지역 세부 조건에 따라 변동될 수 있습니다.<br />
+                      * 최신 정보는 환경부 저공해차 통합누리집(ev.or.kr)에서 확인하세요.
+                    </Typography>
+                  </CardContent>
+                </Card>
+              )}
+              
+              <Box sx={{ mt: 4 }}>
+                <Box>
+                  <Button 
+                    variant="outlined" 
+                    onClick={handleBack}
+                    sx={{ mr: 1 }}
+                  >
+                    이전 단계
+                  </Button>
+                  <Button 
+                    variant="text"
+                    onClick={handleReset}
+                  >
+                    처음으로
+                  </Button>
+                </Box>
+              </Box>
             </Box>
           )}
         </Box>
