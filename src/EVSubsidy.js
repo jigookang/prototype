@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Container, 
   Typography, 
@@ -20,10 +21,14 @@ import {
   CardContent,
   List,
   ListItem,
-  ListItemText
+  ListItemText,
+  IconButton
 } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 function EVSubsidy() {
+  const navigate = useNavigate();
+
   // 현재 단계 (유류비 입력 단계가 첫 번째)
   const [activeStep, setActiveStep] = useState(0);
   
@@ -290,6 +295,19 @@ function EVSubsidy() {
 
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+        <IconButton 
+          onClick={() => navigate('/evtools')}
+          sx={{ mr: 2 }}
+          aria-label="계산기 목록으로 돌아가기"
+        >
+          <ArrowBackIcon fontSize="large" />
+        </IconButton>
+        <Typography variant="h5" component="h1">
+          전기차 보조금 계산기
+        </Typography>
+      </Box>
+      
       <Paper
         elevation={3}
         sx={{

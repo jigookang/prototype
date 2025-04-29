@@ -137,7 +137,7 @@ function MainPage() {
         {/* 두 번째 카드 */}
         <Grid item xs={12} sm={6} md={4}>
           <Card 
-            onClick={() => navigate('/evsubsidy')}
+            onClick={() => navigate('/evtools')}
             sx={{ 
               height: '350px',
               cursor: 'pointer',
@@ -171,7 +171,7 @@ function MainPage() {
                   textAlign: 'center'
                 }}
               >
-                전기차 지원금 확인
+                전기차 관련 계산기
               </Typography>
               <Typography 
                 variant="body1" 
@@ -181,7 +181,7 @@ function MainPage() {
                   color: 'text.secondary'
                 }}
               >
-                지역별 전기차 구매 지원금을 확인해보세요
+                전기차 보조금 및 트럭 비교 계산기
               </Typography>
             </Box>
           </Card>
