@@ -69,6 +69,40 @@ function MainPage() {
     </svg>
   );
 
+  // 콘솔 아이콘
+  const consoleSvg = (
+    <svg width="150" height="150" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      {/* 콘솔 창 */}
+      <rect x="30" y="40" width="140" height="120" rx="5" stroke="#333" strokeWidth="3" fill="none" />
+      
+      {/* 콘솔 텍스트 라인들 */}
+      <path d="M50 70 L 150 70" stroke="#333" strokeWidth="2" />
+      <path d="M50 90 L 150 90" stroke="#333" strokeWidth="2" />
+      <path d="M50 110 L 150 110" stroke="#333" strokeWidth="2" />
+      <path d="M50 130 L 150 130" stroke="#333" strokeWidth="2" />
+      
+      {/* 커서 */}
+      <path d="M50 150 L 60 150" stroke="#333" strokeWidth="3" />
+    </svg>
+  );
+
+  // 주문 관리 아이콘
+  const orderSvg = (
+    <svg width="150" height="150" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      {/* 문서 아이콘 */}
+      <rect x="40" y="40" width="120" height="140" rx="5" stroke="#333" strokeWidth="3" fill="none" />
+      
+      {/* 문서 라인들 */}
+      <path d="M60 70 L 140 70" stroke="#333" strokeWidth="2" />
+      <path d="M60 90 L 140 90" stroke="#333" strokeWidth="2" />
+      <path d="M60 110 L 140 110" stroke="#333" strokeWidth="2" />
+      <path d="M60 130 L 140 130" stroke="#333" strokeWidth="2" />
+      
+      {/* 체크마크 */}
+      <path d="M60 150 L 80 170 L 140 110" stroke="#333" strokeWidth="3" fill="none" />
+    </svg>
+  );
+
   return (
     <Container maxWidth="lg" sx={{ py: 8 }}>
       <Box sx={{ mb: 6, textAlign: 'center' }}>
@@ -190,6 +224,7 @@ function MainPage() {
         {/* 세 번째 카드 */}
         <Grid item xs={12} sm={6} md={4}>
           <Card 
+            onClick={() => navigate('/orders')}
             sx={{ 
               height: '350px',
               cursor: 'pointer',
@@ -213,7 +248,7 @@ function MainPage() {
               justifyContent: 'center',
               p: 3
             }}>
-              {chartSvg}
+              {orderSvg}
               <Typography 
                 variant="h5" 
                 component="h2" 
@@ -223,7 +258,7 @@ function MainPage() {
                   textAlign: 'center'
                 }}
               >
-                데이터 분석
+                주문 관리 콘솔
               </Typography>
               <Typography 
                 variant="body1" 
@@ -233,7 +268,7 @@ function MainPage() {
                   color: 'text.secondary'
                 }}
               >
-                곧 출시 예정
+                주문 현황을 관리할 수 있는 관리자 콘솔
               </Typography>
             </Box>
           </Card>

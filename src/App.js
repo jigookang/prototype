@@ -6,6 +6,8 @@ import EVComparison from './EVComparison';
 import MainSelection from './MainSelection';
 import MainPage from './MainPage';
 import PrettyPriceChecker from './PrettyPriceChecker';
+import ChatConsole from './ConsolePage';
+import OrderConsole from './OrderConsole';
 import './App.css';
 
 function App() {
@@ -18,6 +20,8 @@ function App() {
           <Route path="/subsidy" element={<EVSubsidy />} />
           <Route path="/comparison" element={<EVComparison />} />
           <Route path="/calculator" element={<PrettyPriceChecker />} />
+          <Route path="/chat" element={<ChatConsole />} />
+          <Route path="/orders" element={<OrderConsole />} />
         </Routes>
       </Box>
     </Router>
